@@ -524,12 +524,12 @@ func TestFlowDetail_AggregatesAll(t *testing.T) {
 	s.CreateAgent(ctx(), fid, "scanner", "gpt-4")  //nolint:errcheck
 	s.CreateTask(ctx(), fid, "t1", "desc", "role") //nolint:errcheck
 	task, _ := s.CreateTask(ctx(), fid, "t2", "desc2", "role2")
-	s.CreateSubtask(ctx(), fid, task.ID, "sub1", "subdesc", "subrole")  //nolint:errcheck
-	s.CreateAction(ctx(), fid, task.ID, "", "role", "fn", "docker", nil) //nolint:errcheck
-	s.AddArtifact(ctx(), fid, "action1", "report", "r.txt", "content", nil) //nolint:errcheck
+	s.CreateSubtask(ctx(), fid, task.ID, "sub1", "subdesc", "subrole")         //nolint:errcheck
+	s.CreateAction(ctx(), fid, task.ID, "", "role", "fn", "docker", nil)       //nolint:errcheck
+	s.AddArtifact(ctx(), fid, "action1", "report", "r.txt", "content", nil)    //nolint:errcheck
 	s.AddMemory(ctx(), fid, "action1", "observation", "some observation", nil) //nolint:errcheck
-	s.AddFinding(ctx(), fid, "vuln", "high", "desc") //nolint:errcheck
-	s.CreateExecution(ctx(), fid, "action1", "default", "docker", nil) //nolint:errcheck
+	s.AddFinding(ctx(), fid, "vuln", "high", "desc")                           //nolint:errcheck
+	s.CreateExecution(ctx(), fid, "action1", "default", "docker", nil)         //nolint:errcheck
 
 	detail, err := s.FlowDetail(ctx(), fid)
 	if err != nil {

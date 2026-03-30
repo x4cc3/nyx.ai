@@ -76,7 +76,12 @@ func TestPostgresStoreCRUDAndTenantIsolation(t *testing.T) {
 		t.Fatalf("CreateTask: %v", err)
 	}
 
-	action, err := store.CreateAction(context.Background(), flow.ID, task.ID, "", "browser", "navigate", "docker", map[string]string{"url": "https://app.example.com"})
+	subtask, err := store.CreateSubtask(context.Background(), flow.ID, task.ID, "Navigate", "Navigate to target", "browser")
+	if err != nil {
+		t.Fatalf("CreateSubtask: %v", err)
+	}
+
+	action, err := store.CreateAction(context.Background(), flow.ID, task.ID, subtask.ID, "browser", "navigate", "docker", map[string]string{"url": "https://app.example.com"})
 	if err != nil {
 		t.Fatalf("CreateAction: %v", err)
 	}

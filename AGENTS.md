@@ -80,7 +80,7 @@ nyx.ai/
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Go 1.26 (module: `nyx`) |
+| Language | Go 1.26.1 (module: `nyx`) |
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
 | Database | PostgreSQL 16 with pgvector extension |
 | Message queue | NATS JetStream |
@@ -277,6 +277,7 @@ make infra-down               # Stop local infra
 - **In-memory store**: `store.MemoryStore` for unit tests (no DB needed)
 - **Frontend tests**: Jest + Testing Library (`web/__tests__/`), Playwright for E2E (`web/e2e/`)
 - **Error handling in tests**: Use `//nolint:errcheck` for test-only helper calls, or check errors explicitly with `t.Fatalf`
+- **FK chain in tests**: `actions.subtask_id` is `NOT NULL REFERENCES subtasks(id)`. Always create Flow → Task → Subtask before creating an Action. `memories.action_id` also requires a real Action.
 
 ## Code Style & Conventions
 
