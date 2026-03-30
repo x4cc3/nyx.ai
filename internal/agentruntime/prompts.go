@@ -100,13 +100,13 @@ func (l PromptLibrary) Render(role string, ctx PromptContext) string {
 	var b strings.Builder
 	b.WriteString(tpl.SystemPrompt)
 	b.WriteString("\n\nMission:\n")
-	b.WriteString(fmt.Sprintf("- Flow: %s\n", ctx.Flow.Name))
-	b.WriteString(fmt.Sprintf("- Target: %s\n", ctx.Flow.Target))
-	b.WriteString(fmt.Sprintf("- Objective: %s\n", ctx.Flow.Objective))
-	b.WriteString(fmt.Sprintf("- Task: %s\n", ctx.TaskName))
-	b.WriteString(fmt.Sprintf("- Subtask: %s\n", ctx.SubtaskName))
+	fmt.Fprintf(&b, "- Flow: %s\n", ctx.Flow.Name)
+	fmt.Fprintf(&b, "- Target: %s\n", ctx.Flow.Target)
+	fmt.Fprintf(&b, "- Objective: %s\n", ctx.Flow.Objective)
+	fmt.Fprintf(&b, "- Task: %s\n", ctx.TaskName)
+	fmt.Fprintf(&b, "- Subtask: %s\n", ctx.SubtaskName)
 	if ctx.MemorySummary != "" {
-		b.WriteString(fmt.Sprintf("- Prior memory: %s\n", ctx.MemorySummary))
+		fmt.Fprintf(&b, "- Prior memory: %s\n", ctx.MemorySummary)
 	}
 	if len(tpl.Focus) > 0 {
 		b.WriteString("\nFocus:\n")

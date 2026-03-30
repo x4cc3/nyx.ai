@@ -42,26 +42,6 @@ func toAnyMap(raw []byte) map[string]any {
 	return out
 }
 
-func toDomainFlow(row dbgen.Flow) domain.Flow {
-	return domain.Flow{
-		ID:        row.ID,
-		Name:      row.Name,
-		Target:    row.Target,
-		Objective: row.Objective,
-		Status:    domain.Status(row.Status),
-		CreatedAt: row.CreatedAt,
-		UpdatedAt: row.UpdatedAt,
-	}
-}
-
-func toDomainFlows(rows []dbgen.Flow) []domain.Flow {
-	out := make([]domain.Flow, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, toDomainFlow(row))
-	}
-	return out
-}
-
 func toDomainTask(row dbgen.Task) domain.Task {
 	return domain.Task{
 		ID:          row.ID,

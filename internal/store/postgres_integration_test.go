@@ -25,7 +25,7 @@ func resetIntegrationDatabase(t *testing.T, databaseURL string) {
 	if err != nil {
 		t.Fatalf("open integration database: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if _, err := db.Exec(`
 TRUNCATE TABLE
@@ -52,7 +52,7 @@ func TestPostgresStoreCRUDAndTenantIsolation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewPostgresStore: %v", err)
 	}
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	if err := store.Init(context.Background()); err != nil {
 		t.Fatalf("Init: %v", err)

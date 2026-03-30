@@ -168,8 +168,8 @@ func TestUpdateFlowStatus(t *testing.T) {
 	if updated.Status != domain.StatusRunning {
 		t.Fatalf("expected running, got %s", updated.Status)
 	}
-	if !updated.UpdatedAt.After(flow.UpdatedAt) || updated.UpdatedAt.Equal(flow.UpdatedAt) {
-		// UpdatedAt should be at least equal or after original
+	if updated.UpdatedAt.Before(flow.UpdatedAt) {
+		t.Fatal("expected UpdatedAt to be at or after original")
 	}
 }
 
@@ -521,15 +521,15 @@ func TestFlowDetail_AggregatesAll(t *testing.T) {
 	flow, _ := s.CreateFlow(ctx(), newInput("f1"))
 	fid := flow.ID
 
-	s.CreateAgent(ctx(), fid, "scanner", "gpt-4")
-	s.CreateTask(ctx(), fid, "t1", "desc", "role")
+	s.CreateAgent(ctx(), fid, "scanner", "gpt-4")  //nolint:errcheck
+	s.CreateTask(ctx(), fid, "t1", "desc", "role") //nolint:errcheck
 	task, _ := s.CreateTask(ctx(), fid, "t2", "desc2", "role2")
-	s.CreateSubtask(ctx(), fid, task.ID, "sub1", "subdesc", "subrole")
-	s.CreateAction(ctx(), fid, task.ID, "", "role", "fn", "docker", nil)
-	s.AddArtifact(ctx(), fid, "action1", "report", "r.txt", "content", nil)
-	s.AddMemory(ctx(), fid, "action1", "observation", "some observation", nil)
-	s.AddFinding(ctx(), fid, "vuln", "high", "desc")
-	s.CreateExecution(ctx(), fid, "action1", "default", "docker", nil)
+	s.CreateSubtask(ctx(), fid, task.ID, "sub1", "subdesc", "subrole")  //nolint:errcheck
+	s.CreateAction(ctx(), fid, task.ID, "", "role", "fn", "docker", nil) //nolint:errcheck
+	s.AddArtifact(ctx(), fid, "action1", "report", "r.txt", "content", nil) //nolint:errcheck
+	s.AddMemory(ctx(), fid, "action1", "observation", "some observation", nil) //nolint:errcheck
+	s.AddFinding(ctx(), fid, "vuln", "high", "desc") //nolint:errcheck
+	s.CreateExecution(ctx(), fid, "action1", "default", "docker", nil) //nolint:errcheck
 
 	detail, err := s.FlowDetail(ctx(), fid)
 	if err != nil {
@@ -598,8 +598,8 @@ func TestFlowDetail_DoesNotLeakOtherFlows(t *testing.T) {
 	f1, _ := s.CreateFlow(ctx(), newInput("f1"))
 	f2, _ := s.CreateFlow(ctx(), newInput("f2"))
 
-	s.CreateTask(ctx(), f1.ID, "task-f1", "desc", "role")
-	s.CreateTask(ctx(), f2.ID, "task-f2", "desc", "role")
+	s.CreateTask(ctx(), f1.ID, "task-f1", "desc", "role") //nolint:errcheck
+	s.CreateTask(ctx(), f2.ID, "task-f2", "desc", "role") //nolint:errcheck
 
 	detail, _ := s.FlowDetail(ctx(), f1.ID)
 	if len(detail.Tasks) != 1 {
@@ -768,7 +768,7 @@ func TestReviewApproval_AlreadyReviewed(t *testing.T) {
 	flow, _ := s.CreateFlow(ctx(), newInput("f1"))
 	approval, _ := s.CreateApproval(ctx(), flow.ID, "", "risky", "op", "reason", nil)
 
-	s.ReviewApproval(ctx(), approval.ID, true, "admin", "ok")
+	s.ReviewApproval(ctx(), approval.ID, true, "admin", "ok") //nolint:errcheck
 	// Review again — should be a no-op
 	second, err := s.ReviewApproval(ctx(), approval.ID, false, "other", "nope")
 	if err != nil {
@@ -817,9 +817,9 @@ func TestRecordEvent_AutoIncrement(t *testing.T) {
 
 func TestListEvents_FiltersByFlowID(t *testing.T) {
 	s := NewMemoryStore()
-	s.RecordEvent(ctx(), "flow1", "a", "msg", nil)
-	s.RecordEvent(ctx(), "flow2", "b", "msg", nil)
-	s.RecordEvent(ctx(), "flow1", "c", "msg", nil)
+	s.RecordEvent(ctx(), "flow1", "a", "msg", nil) //nolint:errcheck
+	s.RecordEvent(ctx(), "flow2", "b", "msg", nil) //nolint:errcheck
+	s.RecordEvent(ctx(), "flow1", "c", "msg", nil) //nolint:errcheck
 
 	events, err := s.ListEvents(ctx(), "flow1", 0)
 	if err != nil {

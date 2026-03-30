@@ -304,9 +304,7 @@ func newPageInfo(limit int, after string, returned int, nextAfter string, hasMor
 func requestedIDs(values []string) []string {
 	parts := make([]string, 0, len(values))
 	for _, value := range values {
-		for _, part := range strings.Split(value, ",") {
-			parts = append(parts, part)
-		}
+		parts = append(parts, strings.Split(value, ",")...)
 	}
 	return dedupeTrimmed(parts)
 }

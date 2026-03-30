@@ -182,6 +182,9 @@ func (r *Runtime) planFlow(ctx context.Context, flow domain.Flow) (FlowPlan, err
 		"agent_role":    agent.Role,
 		"stage":         "planning",
 	})
+	if err != nil {
+		r.logger.Warn("failed to create planning execution", "flow_id", flow.ID, "err", err)
+	}
 
 	fallbackPlan := r.enrichPlan(flow, r.decompose(flow))
 	memorySummary := memorySummaryFromFlow(ctx, r.repo.SearchMemories, flow.ID)

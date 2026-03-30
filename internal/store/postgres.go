@@ -87,7 +87,7 @@ func (s *PostgresStore) ListFlowsByTenant(ctx context.Context, tenantID string) 
 	if err != nil {
 		return nil, fmt.Errorf("list flows by tenant: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanFlows(rows)
 }
 
@@ -139,7 +139,7 @@ func (s *PostgresStore) ListFlowsPageByTenant(ctx context.Context, tenantID, aft
 	if err != nil {
 		return nil, "", false, fmt.Errorf("list flows page by tenant: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	flows, err := scanFlows(rows)
 	if err != nil {
@@ -553,7 +553,7 @@ func (s *PostgresStore) SearchMemories(ctx context.Context, flowID, query string
 	if err != nil {
 		return nil, fmt.Errorf("search memories: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	out := make([]domain.Memory, 0)
 	for rows.Next() {
@@ -608,7 +608,7 @@ func (s *PostgresStore) ListApprovalsByTenant(ctx context.Context, tenantID stri
 	if err != nil {
 		return nil, fmt.Errorf("list approvals by tenant: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanApprovals(rows)
 }
 
@@ -647,7 +647,7 @@ func (s *PostgresStore) ListApprovalsPageByTenant(ctx context.Context, tenantID,
 	if err != nil {
 		return nil, "", false, fmt.Errorf("list approvals page by tenant: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	approvals, err := scanApprovals(rows)
 	if err != nil {
@@ -674,7 +674,7 @@ func (s *PostgresStore) ListApprovalsByFlow(ctx context.Context, flowID string) 
 	if err != nil {
 		return nil, fmt.Errorf("list approvals by flow: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	return scanApprovals(rows)
 }
 

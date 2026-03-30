@@ -24,7 +24,7 @@ func Migrate(ctx context.Context, databaseURL string) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	return applyMigrations(ctx, db)
 }
@@ -34,7 +34,7 @@ func Rollback(ctx context.Context, databaseURL string, steps int) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	return rollbackMigrations(ctx, db, steps)
 }
@@ -100,7 +100,7 @@ func rollbackMigrations(ctx context.Context, db *sql.DB, steps int) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	versions := make([]string, 0, steps)
 	for rows.Next() {
