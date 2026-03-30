@@ -71,13 +71,20 @@ func TestPostgresStoreCRUDAndTenantIsolation(t *testing.T) {
 		t.Fatalf("unexpected tenant id: %q", flow.TenantID)
 	}
 
-	if _, err := store.CreateTask(context.Background(), flow.ID, "Recon", "Enumerate application", "planner"); err != nil {
+	task, err := store.CreateTask(context.Background(), flow.ID, "Recon", "Enumerate application", "planner")
+	if err != nil {
 		t.Fatalf("CreateTask: %v", err)
 	}
+
+	action, err := store.CreateAction(context.Background(), flow.ID, task.ID, "", "browser", "navigate", "docker", map[string]string{"url": "https://app.example.com"})
+	if err != nil {
+		t.Fatalf("CreateAction: %v", err)
+	}
+
 	if _, err := store.CreateApproval(context.Background(), flow.ID, "tenant-a", "flow.start", "alice", "operator review", map[string]string{"flow_id": flow.ID}); err != nil {
 		t.Fatalf("CreateApproval: %v", err)
 	}
-	if _, err := store.AddMemory(context.Background(), flow.ID, "action-1", "observation", "Captured login page", map[string]string{"function_name": "browser"}); err != nil {
+	if _, err := store.AddMemory(context.Background(), flow.ID, action.ID, "observation", "Captured login page", map[string]string{"function_name": "browser"}); err != nil {
 		t.Fatalf("AddMemory: %v", err)
 	}
 

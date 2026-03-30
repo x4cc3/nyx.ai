@@ -19,7 +19,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.5.0
+          version: latest
       - name: Run unit tests with coverage
         run: |
           mkdir -p .tmp
@@ -45,20 +45,19 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-      nats:
-        image: nats:2.11-alpine
-        ports:
-          - 4222:4222
-        options: >-
-          --health-cmd "wget -qO- http://127.0.0.1:8222/healthz || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Start NATS with JetStream
+        run: |
+          docker run -d --name nats-js \
+            -p 4222:4222 -p 8222:8222 \
+            nats:2.11-alpine -js -m 8222
+          for i in $(seq 1 30); do
+            wget -qO- http://127.0.0.1:8222/healthz && break || sleep 1
+          done
       - name: Run transport and store integration tests
         env:
           NYX_TEST_DATABASE_URL: postgres://nyx:nyx@127.0.0.1:5432/nyx?sslmode=disable
@@ -113,7 +112,7 @@ jobs:
       - name: Run govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
       - name: Scan repository filesystem with Trivy
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           scan-type: fs
           scan-ref: .
