@@ -1,0 +1,56 @@
+groups:
+  - name: nyx-alerts
+    rules:
+      - alert: NYXHighFlowFailureRate
+        expr: increase(nyx_http_requests_total{path="/api/v1/flows/:id",status="500"}[10m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High flow failure rate
+          description: Flow detail and lifecycle endpoints are returning 5xx responses.
+
+      - alert: NYXExecutorTimeouts
+        expr: increase(nyx_http_requests_total{path="/api/v1/flows/:id",status="504"}[10m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Executor timeout observed
+          description: API requests are surfacing executor timeout behavior.
+
+      - alert: NYXConsumerLag
+        expr: nyx_http_inflight_requests > 25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Sustained request backlog
+          description: Inflight API requests have remained elevated for 10 minutes.
+
+      - alert: NYXMemoryPressure
+        expr: process_resident_memory_bytes > 8e+08
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: High memory pressure
+          description: A NYX service is consuming more than 800MB of resident memory.
+
+      - alert: NYXHighErrorRate
+        expr: sum(rate(nyx_http_requests_total{status=~"5.."}[5m])) / sum(rate(nyx_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High 5xx error rate
+          description: More than 5% of HTTP requests are returning 5xx status codes.
+
+      - alert: NYXOrchestratorActionFailureRate
+        expr: sum(rate(nyx_orchestrator_action_failures_total[10m])) / clamp_min(sum(rate(nyx_orchestrator_actions_total[10m])), 1) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High orchestrator action failure rate
+          description: More than 10% of orchestrator actions are failing over the last 10 minutes.

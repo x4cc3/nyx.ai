@@ -1,0 +1,121 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  go-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Check formatting
+        run: test -z "$(gofmt -l cmd internal)"
+      - name: Run go vet
+        run: go vet ./...
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.5.0
+      - name: Run unit tests with coverage
+        run: |
+          mkdir -p .tmp
+          GOCACHE="${PWD}/.tmp/gocache" go test -coverprofile=.tmp/coverage.out ./...
+      - name: Enforce coverage floor
+        run: |
+          total="$(go tool cover -func=.tmp/coverage.out | awk '/^total:/ {print substr($3, 1, length($3)-1)}')"
+          awk -v total="$total" 'BEGIN { exit !(total + 0 >= 55) }'
+
+  go-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: nyx
+          POSTGRES_USER: nyx
+          POSTGRES_PASSWORD: nyx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nyx -d nyx"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      nats:
+        image: nats:2.11-alpine
+        ports:
+          - 4222:4222
+        options: >-
+          --health-cmd "wget -qO- http://127.0.0.1:8222/healthz || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run transport and store integration tests
+        env:
+          NYX_TEST_DATABASE_URL: postgres://nyx:nyx@127.0.0.1:5432/nyx?sslmode=disable
+          NYX_TEST_NATS_URL: nats://127.0.0.1:4222
+        run: |
+          mkdir -p .tmp
+          GOCACHE="${PWD}/.tmp/gocache" go test ./internal/queue ./internal/store
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+      - name: Run frontend tests
+        run: npm test -- --runInBand
+      - name: Build web workspace
+        run: npm run build
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build api image
+        run: docker build --build-arg SERVICE=api -t nyx-api:ci .
+      - name: Build orchestrator image
+        run: docker build --build-arg SERVICE=orchestrator -t nyx-orchestrator:ci .
+      - name: Build executor image
+        run: docker build --build-arg SERVICE=executor -t nyx-executor:ci .
+      - name: Build migrate image
+        run: docker build --build-arg SERVICE=migrate -t nyx-migrate:ci .
+      - name: Build pentest executor image
+        run: docker build -f Dockerfile.executor-pentest -t nyx-executor-pentest:ci .
+      - name: Build frontend image
+        run: docker build -t nyx-web:ci ./web
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Run govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - name: Scan repository filesystem with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true

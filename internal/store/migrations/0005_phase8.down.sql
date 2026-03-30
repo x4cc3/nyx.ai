@@ -1,0 +1,2 @@
+ALTER TABLE executions
+DROP COLUMN IF EXISTS metadata;

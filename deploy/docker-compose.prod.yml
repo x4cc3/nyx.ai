@@ -1,0 +1,195 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - nyx-prod-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nats:
+    image: nats:2.11-alpine
+    restart: unless-stopped
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    volumes:
+      - nyx-prod-nats:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: migrate
+        VERSION: ${NYX_VERSION:-dev}
+        COMMIT: ${NYX_COMMIT:-unknown}
+        BUILD_DATE: ${NYX_BUILD_DATE:-unknown}
+    image: nyx-migrate:${NYX_VERSION:-latest}
+    restart: "no"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: api
+        VERSION: ${NYX_VERSION:-dev}
+        COMMIT: ${NYX_COMMIT:-unknown}
+        BUILD_DATE: ${NYX_BUILD_DATE:-unknown}
+    image: nyx-api:${NYX_VERSION:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+      - "9080:9080"
+    group_add:
+      - "${DOCKER_SOCKET_GID:-0}"
+    environment:
+      NYX_EXECUTOR_MODE: ${NYX_EXECUTOR_MODE:-docker}
+      NYX_BROWSER_MODE: ${NYX_BROWSER_MODE:-chromedp}
+      NYX_BROWSER_EXECUTABLE: ${NYX_BROWSER_EXECUTABLE:-/usr/bin/chromium}
+    volumes:
+      - nyx-executor-workspaces:/tmp/nyx-executor
+      - nyx-browser-artifacts:/tmp/nyx-browser
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: orchestrator
+        VERSION: ${NYX_VERSION:-dev}
+        COMMIT: ${NYX_COMMIT:-unknown}
+        BUILD_DATE: ${NYX_BUILD_DATE:-unknown}
+    image: nyx-orchestrator:${NYX_VERSION:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "9081:9081"
+    group_add:
+      - "${DOCKER_SOCKET_GID:-0}"
+    environment:
+      NYX_EXECUTOR_MODE: ${NYX_EXECUTOR_MODE:-docker}
+      NYX_BROWSER_MODE: ${NYX_BROWSER_MODE:-chromedp}
+      NYX_BROWSER_EXECUTABLE: ${NYX_BROWSER_EXECUTABLE:-/usr/bin/chromium}
+    volumes:
+      - nyx-executor-workspaces:/tmp/nyx-executor
+      - nyx-browser-artifacts:/tmp/nyx-browser
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9081/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  executor:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        SERVICE: executor
+        VERSION: ${NYX_VERSION:-dev}
+        COMMIT: ${NYX_COMMIT:-unknown}
+        BUILD_DATE: ${NYX_BUILD_DATE:-unknown}
+    image: nyx-executor:${NYX_VERSION:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "9082:9082"
+    group_add:
+      - "${DOCKER_SOCKET_GID:-0}"
+    environment:
+      NYX_EXECUTOR_MODE: ${NYX_EXECUTOR_MODE:-docker}
+      NYX_BROWSER_MODE: ${NYX_BROWSER_MODE:-chromedp}
+      NYX_BROWSER_EXECUTABLE: ${NYX_BROWSER_EXECUTABLE:-/usr/bin/chromium}
+    volumes:
+      - nyx-executor-workspaces:/tmp/nyx-executor
+      - nyx-browser-artifacts:/tmp/nyx-browser
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9082/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_SITE_URL: ${NYX_SITE_URL:-http://localhost:3000}
+    image: nyx-web:${NYX_VERSION:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NYX_API_BASE_URL: ${NYX_WEB_API_BASE_URL:-http://api:8080/api}
+      NYX_SITE_URL: ${NYX_SITE_URL:-http://localhost:3000}
+      NYX_API_KEY: ${NYX_WEB_API_KEY:-}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      NEXT_PUBLIC_SITE_URL: ${NYX_SITE_URL:-http://localhost:3000}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  nyx-prod-postgres:
+  nyx-prod-nats:
+  nyx-executor-workspaces:
+  nyx-browser-artifacts:

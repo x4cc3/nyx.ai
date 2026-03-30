@@ -1,0 +1,19 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "db/queries"
+    schema:
+      - "internal/store/migrations/0001_init.up.sql"
+      - "internal/store/migrations/0002_phase5.up.sql"
+      - "internal/store/migrations/0003_phase6.up.sql"
+      - "internal/store/migrations/0004_phase9_embeddings.up.sql"
+      - "internal/store/migrations/0005_phase8.up.sql"
+      - "internal/store/migrations/0006_phase10_indexes.up.sql"
+      - "internal/store/migrations/0007_add_indexes.up.sql"
+    gen:
+      go:
+        package: "dbgen"
+        out: "internal/dbgen"
+        sql_package: "database/sql"
+        emit_prepared_queries: true
+        emit_interface: true

@@ -1,0 +1,343 @@
+@config "../tailwind.config.js";
+@import "tailwindcss";
+
+@layer base {
+    :root {
+        /* Operator console (dark-only) */
+        --background: 144 20% 5%;
+        --foreground: 156 43% 93%;
+        --card: 150 20% 8%;
+        --card-foreground: 156 43% 93%;
+        --popover: 147 19% 9%;
+        --popover-foreground: 156 43% 93%;
+        --primary: 156 100% 41%;
+        --primary-foreground: 144 20% 5%;
+        --secondary: 147 19% 9%;
+        --secondary-foreground: 156 43% 93%;
+        --muted: 145 16% 15%;
+        --muted-foreground: 146 9% 54%;
+        --accent: 157 100% 30%;
+        --accent-foreground: 156 43% 93%;
+        --destructive: 0 100% 72%;
+        --destructive-foreground: 144 20% 5%;
+        --border: 145 16% 15%;
+        --input: 145 16% 18%;
+        --ring: 156 100% 41%;
+        --radius: 2px;
+        --nyx-green: 156 100% 41%;
+        --nyx-hot: 0 100% 72%;
+        --nyx-warn: 41 84% 66%;
+        --nyx-success: 156 76% 59%;
+
+        /* Non-tailwind misc tokens */
+        --glow: rgba(0, 209, 124, 0.32);
+        --grid: 152 35% 11%;
+    }
+
+    .theme-ops-neon {
+        /* Secondary surfaces go near-black (requested). */
+        --secondary: 150 20% 3%;
+    }
+
+    * {
+        border-color: hsl(var(--border));
+    }
+
+    html {
+        scroll-behavior: smooth;
+        font-size: 16px;
+        overflow-x: hidden;
+    }
+
+    body {
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family:
+            var(--font-sans),
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            "Segoe UI",
+            Arial,
+            sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+    }
+
+    @media (min-width: 768px) {
+        html {
+            font-size: 17px;
+        }
+    }
+
+    @media (min-width: 1280px) {
+        html {
+            font-size: 18px;
+        }
+    }
+}
+
+@keyframes opsSweep {
+    from {
+        transform: translateY(-25%);
+    }
+    to {
+        transform: translateY(25%);
+    }
+}
+
+@layer components {
+    .prose {
+        @apply text-sm leading-relaxed text-foreground/90;
+    }
+
+    .prose h1,
+    .prose h2,
+    .prose h3,
+    .prose h4 {
+        @apply font-semibold text-foreground mt-4 mb-2;
+    }
+
+    .prose p {
+        @apply mb-2;
+    }
+
+    .prose ul,
+    .prose ol {
+        @apply ml-4 mb-2;
+    }
+
+    .prose li {
+        @apply mb-1;
+    }
+
+    .prose code {
+        @apply bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-primary;
+    }
+
+    .prose pre {
+        @apply bg-muted p-3 rounded-lg overflow-x-auto mb-3;
+    }
+
+    .prose pre code {
+        @apply bg-transparent p-0;
+    }
+
+    .prose a {
+        @apply text-primary underline underline-offset-2;
+    }
+
+    .prose blockquote {
+        @apply border-l-2 border-primary/30 pl-3 italic text-muted-foreground;
+    }
+
+    .prose-report {
+        @apply text-base leading-8 text-foreground/92;
+    }
+
+    .prose-report h1,
+    .prose-report h2,
+    .prose-report h3,
+    .prose-report h4 {
+        @apply mt-5 mb-3 font-semibold tracking-tight text-foreground;
+    }
+
+    .prose-report p {
+        @apply mb-3;
+    }
+
+    .prose-report ul,
+    .prose-report ol {
+        @apply ml-5 mb-3;
+    }
+
+    .prose-report li {
+        @apply mb-1.5;
+    }
+
+    .prose-report a {
+        color: rgba(0, 180, 255, 0.95);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .prose-report code {
+        @apply bg-muted/70 px-2 py-1 rounded-md text-[0.85em] font-mono;
+        color: rgba(0, 180, 255, 0.95);
+    }
+
+    .prose-report strong {
+        @apply text-foreground font-semibold;
+    }
+
+    .prose-report blockquote {
+        @apply border-l-2 border-primary/30 pl-4 italic text-foreground/70;
+    }
+}
+
+/* Focus-visible ring for accessibility */
+:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+}
+
+@layer utilities {
+    .bg-grid {
+        background-image:
+            linear-gradient(
+                to right,
+                hsl(var(--grid) / 0.45) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                to bottom,
+                hsl(var(--grid) / 0.45) 1px,
+                transparent 1px
+            );
+        background-size: 48px 48px;
+        background-position: center;
+    }
+
+    .bg-noise {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 160px 160px;
+    }
+
+    /* Landing-only background treatment. */
+    .landing-bg-base {
+        background:
+            linear-gradient(to bottom, #131313 0%, #101010 54%, #0d0d0d 100%);
+    }
+
+    .landing-bg-shell {
+        --landing-grid-major: 56px;
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .landing-bg-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(
+                960px circle at 50% -12%,
+                rgba(255, 255, 255, 0.03) 0%,
+                transparent 56%
+            ),
+            radial-gradient(
+                840px circle at 50% 118%,
+                rgba(0, 0, 0, 0.16) 0%,
+                transparent 58%
+            );
+    }
+
+    .landing-bg-shell::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(
+                to right,
+                rgba(0, 0, 0, 0.22) 0%,
+                transparent 8%,
+                transparent 92%,
+                rgba(0, 0, 0, 0.22) 100%
+            );
+    }
+
+    .landing-grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(
+                to right,
+                rgba(112, 112, 112, 0.24) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                to bottom,
+                rgba(112, 112, 112, 0.24) 1px,
+                transparent 1px
+            );
+        background-size:
+            var(--landing-grid-major) var(--landing-grid-major),
+            var(--landing-grid-major) var(--landing-grid-major);
+        mask-image:
+            radial-gradient(circle at 50% 50%, black 0%, black 74%, transparent 100%),
+            linear-gradient(
+                to bottom,
+                transparent 0%,
+                black 10%,
+                black 90%,
+                transparent 100%
+            );
+        mask-composite: intersect;
+        opacity: 0.88;
+    }
+
+    .landing-frame-overlay {
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0.025) 0%,
+                transparent 6%,
+                transparent 94%,
+                rgba(255, 255, 255, 0.02) 100%
+            );
+        opacity: 0.5;
+    }
+
+    .no-scrollbar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* Smooth progress bar transitions */
+.h-full.bg-primary\/70,
+.h-full[style*="width"] {
+    transition: width 0.5s ease;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

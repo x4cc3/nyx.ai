@@ -1,0 +1,83 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Derive release metadata
+        id: meta
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Build and push api image
+        run: |
+          docker build \
+            --build-arg SERVICE=api \
+            --build-arg VERSION="${{ steps.meta.outputs.tag }}" \
+            --build-arg COMMIT="${{ steps.meta.outputs.sha }}" \
+            -t ghcr.io/${{ github.repository }}/nyx-api:${{ steps.meta.outputs.tag }} .
+          docker push ghcr.io/${{ github.repository }}/nyx-api:${{ steps.meta.outputs.tag }}
+      - name: Build and push orchestrator image
+        run: |
+          docker build \
+            --build-arg SERVICE=orchestrator \
+            --build-arg VERSION="${{ steps.meta.outputs.tag }}" \
+            --build-arg COMMIT="${{ steps.meta.outputs.sha }}" \
+            -t ghcr.io/${{ github.repository }}/nyx-orchestrator:${{ steps.meta.outputs.tag }} .
+          docker push ghcr.io/${{ github.repository }}/nyx-orchestrator:${{ steps.meta.outputs.tag }}
+      - name: Build and push executor image
+        run: |
+          docker build \
+            --build-arg SERVICE=executor \
+            --build-arg VERSION="${{ steps.meta.outputs.tag }}" \
+            --build-arg COMMIT="${{ steps.meta.outputs.sha }}" \
+            -t ghcr.io/${{ github.repository }}/nyx-executor:${{ steps.meta.outputs.tag }} .
+          docker push ghcr.io/${{ github.repository }}/nyx-executor:${{ steps.meta.outputs.tag }}
+      - name: Build and push migrate image
+        run: |
+          docker build \
+            --build-arg SERVICE=migrate \
+            --build-arg VERSION="${{ steps.meta.outputs.tag }}" \
+            --build-arg COMMIT="${{ steps.meta.outputs.sha }}" \
+            -t ghcr.io/${{ github.repository }}/nyx-migrate:${{ steps.meta.outputs.tag }} .
+          docker push ghcr.io/${{ github.repository }}/nyx-migrate:${{ steps.meta.outputs.tag }}
+      - name: Build and push pentest executor image
+        run: |
+          docker build \
+            -f Dockerfile.executor-pentest \
+            -t ghcr.io/${{ github.repository }}/nyx-executor-pentest:${{ steps.meta.outputs.tag }} .
+          docker push ghcr.io/${{ github.repository }}/nyx-executor-pentest:${{ steps.meta.outputs.tag }}
+      - name: Build release changelog
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          {
+            echo "# ${GITHUB_REF_NAME}"
+            echo
+            if [ -n "$previous_tag" ]; then
+              git log --pretty=format:'- %s (%h)' "${previous_tag}..${GITHUB_REF_NAME}"
+            else
+              git log --pretty=format:'- %s (%h)'
+            fi
+          } > RELEASE_NOTES.md
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md

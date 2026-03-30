@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: NYX API
+  version: "1.0.0"
+servers:
+  - url: /api
+paths:
+  /v1/architecture:
+    get:
+      summary: Get runtime architecture metadata
+      responses:
+        "200":
+          description: Architecture payload
+  /v1/functions:
+    get:
+      summary: List registered function definitions
+      responses:
+        "200":
+          description: Function catalog
+  /v1/flows:
+    get:
+      summary: List flows
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - in: query
+          name: after
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated flow list
+    post:
+      summary: Create a flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, target, objective]
+              properties:
+                name:
+                  type: string
+                target:
+                  type: string
+                  format: uri
+                objective:
+                  type: string
+      responses:
+        "201":
+          description: Flow created
+        "400":
+          description: Validation failed
+  /v1/flows/{flowId}:
+    get:
+      summary: Get flow detail
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Flow detail
+  /v1/flows/{flowId}/start:
+    post:
+      summary: Start a flow
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Flow queued or approval pending
+  /v1/flows/{flowId}/cancel:
+    post:
+      summary: Cancel a flow
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Flow marked as cancelled
+  /v1/flows/{flowId}/workspace:
+    get:
+      summary: Get the operator workspace payload
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workspace payload
+  /v1/flows/{flowId}/events:
+    get:
+      summary: Stream flow events over SSE
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Server-sent event stream
+  /v1/flows/{flowId}/report:
+    get:
+      summary: Download a flow report
+      parameters:
+        - in: path
+          name: flowId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [markdown, json, pdf]
+      responses:
+        "200":
+          description: Report payload
+  /v1/approvals:
+    get:
+      summary: List approvals
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - in: query
+          name: after
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated approval list
+  /v1/approvals/{approvalId}:
+    get:
+      summary: Get approval detail
+      parameters:
+        - in: path
+          name: approvalId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approval payload
+  /v1/approvals/{approvalId}/review:
+    post:
+      summary: Review one approval
+      parameters:
+        - in: path
+          name: approvalId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [approved]
+              properties:
+                approved:
+                  type: boolean
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Approval reviewed
+  /v1/approvals/batch:
+    post:
+      summary: Review multiple approvals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [approval_ids, approved]
+              properties:
+                approval_ids:
+                  type: array
+                  items:
+                    type: string
+                approved:
+                  type: boolean
+                note:
+                  type: string
+      responses:
+        "200":
+          description: Batch review result

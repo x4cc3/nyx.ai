@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Disallow API and private routes
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /scans/
+
+Sitemap: /sitemap.xml

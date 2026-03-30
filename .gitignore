@@ -1,0 +1,9 @@
+.gocache/
+.gomodcache/
+bin/
+.env
+deploy/.env
+web/node_modules/
+web/.next/
+web/tsconfig.tsbuildinfo
+web/dist/

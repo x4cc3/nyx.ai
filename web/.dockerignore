@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+.pytest_cache
+.env.local
+.env.local.example
+tsconfig.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

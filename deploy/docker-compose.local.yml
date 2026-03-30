@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: nyx
+      POSTGRES_USER: nyx
+      POSTGRES_PASSWORD: nyx-dev-only-change-me
+    ports:
+      - "5432:5432"
+    volumes:
+      - nyx-local-postgres:/var/lib/postgresql/data
+
+  nats:
+    image: nats:2.11-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nyx-local-nats:/data
+
+volumes:
+  nyx-local-postgres:
+  nyx-local-nats:
