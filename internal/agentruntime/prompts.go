@@ -174,7 +174,7 @@ func renderFunctionCatalog(defs []domain.FunctionDef) string {
 			continue
 		}
 		sort.Strings(names)
-		b.WriteString(fmt.Sprintf("- %s: %s\n", labels[category], strings.Join(names, ", ")))
+		fmt.Fprintf(&b, "- %s: %s\n", labels[category], strings.Join(names, ", "))
 	}
 	return b.String()
 }

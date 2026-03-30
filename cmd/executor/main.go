@@ -55,13 +55,13 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("open repository: %w", err)
 	}
-	defer repo.Close()
+	defer func() { _ = repo.Close() }()
 
 	transport, err := queue.OpenTransport(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("open transport: %w", err)
 	}
-	defer transport.Close()
+	defer func() { _ = transport.Close() }()
 
 	if transport.Mode() != "jetstream" {
 		return errors.New("NATS_URL is required for executor transport")

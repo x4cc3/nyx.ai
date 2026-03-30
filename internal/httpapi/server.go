@@ -483,8 +483,8 @@ func writeSSE(w http.ResponseWriter, event string, payload any) {
 		slog.Default().Warn("failed to marshal SSE payload", "event", event, "error", err)
 		return
 	}
-	fmt.Fprintf(w, "event: %s\n", event)
-	fmt.Fprintf(w, "data: %s\n\n", bytes)
+	_, _ = fmt.Fprintf(w, "event: %s\n", event)
+	_, _ = fmt.Fprintf(w, "data: %s\n\n", bytes)
 }
 
 type tenantContextKey struct{}

@@ -125,7 +125,7 @@ func TestJetStreamTransportDeadLettersMalformedPayloads(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SubscribeSync: %v", err)
 	}
-	defer dlqSub.Unsubscribe()
+	defer func() { _ = dlqSub.Unsubscribe() }()
 
 	if _, err := transport.js.Publish(transport.flowSubject, []byte("{")); err != nil {
 		t.Fatalf("publish malformed flow: %v", err)
@@ -163,7 +163,7 @@ func TestJetStreamTransportDeadLettersAfterMaxDeliver(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SubscribeSync: %v", err)
 	}
-	defer dlqSub.Unsubscribe()
+	defer func() { _ = dlqSub.Unsubscribe() }()
 
 	if err := transport.PublishFlowRun(context.Background(), FlowRunMessage{FlowID: "flow-1"}); err != nil {
 		t.Fatalf("PublishFlowRun: %v", err)

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"os"
 	"testing"
 
@@ -101,7 +102,7 @@ func TestPostgresStoreCRUDAndTenantIsolation(t *testing.T) {
 		t.Fatalf("unexpected detail payload: %+v", detail)
 	}
 
-	if _, err := store.FlowDetailForTenant(context.Background(), "tenant-b", flow.ID); err != ErrNotFound {
+	if _, err := store.FlowDetailForTenant(context.Background(), "tenant-b", flow.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("expected tenant isolation error, got %v", err)
 	}
 

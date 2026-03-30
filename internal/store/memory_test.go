@@ -88,8 +88,8 @@ func TestGetFlowForTenant_CorrectTenant(t *testing.T) {
 
 func TestListFlows(t *testing.T) {
 	s := NewMemoryStore()
-	s.CreateFlow(ctx(), newInput("a"))
-	s.CreateFlow(ctx(), newInput("b"))
+	s.CreateFlow(ctx(), newInput("a")) //nolint:errcheck
+	s.CreateFlow(ctx(), newInput("b")) //nolint:errcheck
 	flows, err := s.ListFlows(ctx())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -101,9 +101,9 @@ func TestListFlows(t *testing.T) {
 
 func TestListFlowsByTenant(t *testing.T) {
 	s := NewMemoryStore()
-	s.CreateFlowForTenant(ctx(), "acme", newInput("a"))
-	s.CreateFlowForTenant(ctx(), "acme", newInput("b"))
-	s.CreateFlowForTenant(ctx(), "other", newInput("c"))
+	s.CreateFlowForTenant(ctx(), "acme", newInput("a"))  //nolint:errcheck
+	s.CreateFlowForTenant(ctx(), "acme", newInput("b"))  //nolint:errcheck
+	s.CreateFlowForTenant(ctx(), "other", newInput("c")) //nolint:errcheck
 
 	flows, err := s.ListFlowsByTenant(ctx(), "acme")
 	if err != nil {
@@ -211,8 +211,8 @@ func TestClaimNextQueuedFlow_ClaimsOldest(t *testing.T) {
 	time.Sleep(2 * time.Millisecond)
 	f2, _ := s.CreateFlow(ctx(), newInput("second"))
 
-	s.QueueFlow(ctx(), f1.ID)
-	s.QueueFlow(ctx(), f2.ID)
+	s.QueueFlow(ctx(), f1.ID) //nolint:errcheck
+	s.QueueFlow(ctx(), f2.ID) //nolint:errcheck
 
 	claimed, ok, err := s.ClaimNextQueuedFlow(ctx())
 	if err != nil {
@@ -231,7 +231,7 @@ func TestClaimNextQueuedFlow_ClaimsOldest(t *testing.T) {
 
 func TestClaimNextQueuedFlow_NoneQueued(t *testing.T) {
 	s := NewMemoryStore()
-	s.CreateFlow(ctx(), newInput("f1")) // pending, not queued
+	s.CreateFlow(ctx(), newInput("f1")) //nolint:errcheck // pending, not queued
 
 	_, ok, err := s.ClaimNextQueuedFlow(ctx())
 	if err != nil {
@@ -838,8 +838,8 @@ func TestListEvents_FiltersByFlowID(t *testing.T) {
 func TestListEvents_FiltersBySequence(t *testing.T) {
 	s := NewMemoryStore()
 	e1, _ := s.RecordEvent(ctx(), "flow1", "a", "msg1", nil)
-	s.RecordEvent(ctx(), "flow1", "b", "msg2", nil)
-	s.RecordEvent(ctx(), "flow1", "c", "msg3", nil)
+	s.RecordEvent(ctx(), "flow1", "b", "msg2", nil) //nolint:errcheck
+	s.RecordEvent(ctx(), "flow1", "c", "msg3", nil) //nolint:errcheck
 
 	events, err := s.ListEvents(ctx(), "flow1", e1.Sequence)
 	if err != nil {

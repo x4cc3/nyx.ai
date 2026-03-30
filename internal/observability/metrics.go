@@ -41,7 +41,7 @@ func (r *Registry) SetGauge(name string, labels map[string]string, value float64
 func (r *Registry) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-		fmt.Fprint(w, r.Render())
+		_, _ = fmt.Fprint(w, r.Render())
 	})
 }
 

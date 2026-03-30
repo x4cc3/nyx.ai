@@ -350,7 +350,7 @@ func (s *Server) handleFlowEvents(w http.ResponseWriter, r *http.Request, flowID
 			}
 			flusher.Flush()
 		case <-keepAlive.C:
-			fmt.Fprint(w, ": keep-alive\n\n")
+			_, _ = fmt.Fprint(w, ": keep-alive\n\n")
 			flusher.Flush()
 		}
 	}

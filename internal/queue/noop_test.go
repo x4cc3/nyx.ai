@@ -251,5 +251,5 @@ func TestOpenTransportReturnsNoopWhenNoNATSURL(t *testing.T) {
 	if transport.Mode() != "poll" {
 		t.Fatalf("expected poll mode for noop transport, got %s", transport.Mode())
 	}
-	transport.Close()
+	_ = transport.Close()
 }

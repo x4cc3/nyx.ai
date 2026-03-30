@@ -93,7 +93,7 @@ func (t *JetStreamTransport) ConsumeFlowRuns(ctx context.Context, handler func(c
 	if err != nil {
 		return err
 	}
-	defer sub.Unsubscribe()
+	defer func() { _ = sub.Unsubscribe() }()
 
 	for {
 		msgs, err := t.fetch(ctx, sub)
@@ -134,7 +134,7 @@ func (t *JetStreamTransport) DispatchAction(ctx context.Context, req ActionReque
 	if err != nil {
 		return ActionResultMessage{}, err
 	}
-	defer sub.Unsubscribe()
+	defer func() { _ = sub.Unsubscribe() }()
 
 	if err := t.publish(ctx, t.actionSubject, req); err != nil {
 		return ActionResultMessage{}, err
@@ -157,7 +157,7 @@ func (t *JetStreamTransport) ConsumeActionRequests(ctx context.Context, handler 
 	if err != nil {
 		return err
 	}
-	defer sub.Unsubscribe()
+	defer func() { _ = sub.Unsubscribe() }()
 
 	for {
 		msgs, err := t.fetch(ctx, sub)

@@ -225,7 +225,7 @@ func (s *Service) searchDuckDuckGo(ctx context.Context, query string) (Result, e
 	if err != nil {
 		return Result{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -278,7 +278,7 @@ func (s *Service) searchSearxNG(ctx context.Context, query string) (Result, erro
 	if err != nil {
 		return Result{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -356,7 +356,7 @@ func (s *Service) searchTavily(ctx context.Context, query, kind string) (Result,
 	if err != nil {
 		return Result{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Result{}, err
@@ -432,7 +432,7 @@ func (s *Service) searchPerplexity(ctx context.Context, query string) (Result, e
 	if err != nil {
 		return Result{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Result{}, err
@@ -529,7 +529,7 @@ func (s *Service) searchSploitus(ctx context.Context, query string) (Result, err
 	if err != nil {
 		return Result{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
