@@ -119,7 +119,7 @@ func (c *Client) Plan(ctx context.Context, req agentruntime.PlannerRequest) (age
 	if err != nil {
 		return agentruntime.FlowPlan{}, agentruntime.PlannerMetadata{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

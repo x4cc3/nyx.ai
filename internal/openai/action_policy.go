@@ -70,7 +70,7 @@ func (c *Client) NextAction(ctx context.Context, req agentruntime.ActionPolicyRe
 	if err != nil {
 		return agentruntime.ActionDecision{}, agentruntime.ActionPolicyMetadata{}, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

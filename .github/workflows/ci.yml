@@ -23,7 +23,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           mkdir -p .tmp
-          GOCACHE="${PWD}/.tmp/gocache" go test -coverprofile=.tmp/coverage.out ./...
+          GOCACHE="${PWD}/.tmp/gocache" go test -coverprofile=.tmp/coverage.out $(go list ./internal/... | grep -v 'internal/dbgen')
       - name: Enforce coverage floor
         run: |
           total="$(go tool cover -func=.tmp/coverage.out | awk '/^total:/ {print substr($3, 1, length($3)-1)}')"

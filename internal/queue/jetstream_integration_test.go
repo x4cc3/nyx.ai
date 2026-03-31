@@ -87,12 +87,11 @@ func TestJetStreamTransportFlowRoundTrip(t *testing.T) {
 func TestJetStreamTransportDispatchAction(t *testing.T) {
 	transport := newIntegrationTransport(t, "actiondispatch", 2)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	go func() {
 		err := transport.ConsumeActionRequests(ctx, func(_ context.Context, msg ActionRequestMessage) (ActionResultMessage, error) {
-			cancel()
 			return ActionResultMessage{
 				ActionID:     msg.ActionID,
 				FlowID:       msg.FlowID,
@@ -100,12 +99,12 @@ func TestJetStreamTransportDispatchAction(t *testing.T) {
 				Output:       map[string]string{"summary": "completed"},
 			}, nil
 		})
-		if err != nil && !errors.Is(err, context.Canceled) {
+		if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
 			t.Errorf("ConsumeActionRequests: %v", err)
 		}
 	}()
 
-	result, err := transport.DispatchAction(context.Background(), ActionRequestMessage{
+	result, err := transport.DispatchAction(ctx, ActionRequestMessage{
 		ActionID:     "action-1",
 		FlowID:       "flow-1",
 		FunctionName: "terminal_exec",

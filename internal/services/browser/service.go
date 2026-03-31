@@ -262,7 +262,7 @@ func (s *Service) navigateHTTP(ctx context.Context, req Request, fallbackErr err
 			Summary:  summary,
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	html := string(body)
