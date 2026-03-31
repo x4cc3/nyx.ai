@@ -28,3 +28,23 @@ func TestDerivedSubjects(t *testing.T) {
 		t.Fatalf("unexpected dlq subject: %s", got)
 	}
 }
+
+func TestDeadLetterPayloadPreservesValidJSON(t *testing.T) {
+	payload, err := deadLetterPayload([]byte(`{"flow_id":"flow-1"}`))
+	if err != nil {
+		t.Fatalf("deadLetterPayload: %v", err)
+	}
+	if string(payload) != `{"flow_id":"flow-1"}` {
+		t.Fatalf("unexpected payload: %s", payload)
+	}
+}
+
+func TestDeadLetterPayloadEscapesInvalidJSON(t *testing.T) {
+	payload, err := deadLetterPayload([]byte("{"))
+	if err != nil {
+		t.Fatalf("deadLetterPayload: %v", err)
+	}
+	if string(payload) != `"{"` {
+		t.Fatalf("unexpected escaped payload: %s", payload)
+	}
+}

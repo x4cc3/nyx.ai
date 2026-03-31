@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"nyx/internal/config"
+
+	"github.com/nats-io/nats.go"
 )
 
 func integrationNATSURL(t *testing.T) string {
@@ -45,8 +47,25 @@ func newIntegrationTransport(t *testing.T, suffix string, maxDeliver int) *JetSt
 	if err != nil {
 		t.Fatalf("OpenTransport: %v", err)
 	}
-	t.Cleanup(func() { _ = transport.Close() })
-	return transport.(*JetStreamTransport)
+	jsTransport := transport.(*JetStreamTransport)
+	t.Cleanup(func() {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		for _, stream := range []string{
+			cfg.FlowStream,
+			cfg.ActionStream,
+			cfg.ActionResultStream,
+			cfg.EventStream,
+			cfg.DLQStream,
+		} {
+			if err := jsTransport.js.DeleteStream(stream, nats.Context(cleanupCtx)); err != nil && !errors.Is(err, nats.ErrStreamNotFound) {
+				t.Errorf("DeleteStream(%s): %v", stream, err)
+			}
+		}
+		_ = jsTransport.Close()
+	})
+	return jsTransport
 }
 
 func TestJetStreamTransportFlowRoundTrip(t *testing.T) {
@@ -89,9 +108,10 @@ func TestJetStreamTransportDispatchAction(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+	consumerDone := make(chan error, 1)
 
 	go func() {
-		err := transport.ConsumeActionRequests(ctx, func(_ context.Context, msg ActionRequestMessage) (ActionResultMessage, error) {
+		consumerDone <- transport.ConsumeActionRequests(ctx, func(_ context.Context, msg ActionRequestMessage) (ActionResultMessage, error) {
 			return ActionResultMessage{
 				ActionID:     msg.ActionID,
 				FlowID:       msg.FlowID,
@@ -99,9 +119,6 @@ func TestJetStreamTransportDispatchAction(t *testing.T) {
 				Output:       map[string]string{"summary": "completed"},
 			}, nil
 		})
-		if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
-			t.Errorf("ConsumeActionRequests: %v", err)
-		}
 	}()
 
 	result, err := transport.DispatchAction(ctx, ActionRequestMessage{
@@ -115,6 +132,16 @@ func TestJetStreamTransportDispatchAction(t *testing.T) {
 	if result.ActionID != "action-1" || result.Output["summary"] != "completed" {
 		t.Fatalf("unexpected action result: %+v", result)
 	}
+
+	cancel()
+	select {
+	case err := <-consumerDone:
+		if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("ConsumeActionRequests: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for action consumer shutdown")
+	}
 }
 
 func TestJetStreamTransportDeadLettersMalformedPayloads(t *testing.T) {
@@ -125,6 +152,9 @@ func TestJetStreamTransportDeadLettersMalformedPayloads(t *testing.T) {
 		t.Fatalf("SubscribeSync: %v", err)
 	}
 	defer func() { _ = dlqSub.Unsubscribe() }()
+	if err := transport.nc.Flush(); err != nil {
+		t.Fatalf("Flush: %v", err)
+	}
 
 	if _, err := transport.js.Publish(transport.flowSubject, []byte("{")); err != nil {
 		t.Fatalf("publish malformed flow: %v", err)
@@ -163,6 +193,9 @@ func TestJetStreamTransportDeadLettersAfterMaxDeliver(t *testing.T) {
 		t.Fatalf("SubscribeSync: %v", err)
 	}
 	defer func() { _ = dlqSub.Unsubscribe() }()
+	if err := transport.nc.Flush(); err != nil {
+		t.Fatalf("Flush: %v", err)
+	}
 
 	if err := transport.PublishFlowRun(context.Background(), FlowRunMessage{FlowID: "flow-1"}); err != nil {
 		t.Fatalf("PublishFlowRun: %v", err)

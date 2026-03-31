@@ -135,6 +135,9 @@ func (t *JetStreamTransport) DispatchAction(ctx context.Context, req ActionReque
 		return ActionResultMessage{}, err
 	}
 	defer func() { _ = sub.Unsubscribe() }()
+	if err := t.nc.Flush(); err != nil {
+		return ActionResultMessage{}, err
+	}
 
 	if err := t.publish(ctx, t.actionSubject, req); err != nil {
 		return ActionResultMessage{}, err
@@ -337,14 +340,30 @@ func (t *JetStreamTransport) publish(ctx context.Context, subject string, payloa
 	return err
 }
 
+func deadLetterPayload(body []byte) (json.RawMessage, error) {
+	if json.Valid(body) {
+		return append(json.RawMessage(nil), body...), nil
+	}
+
+	encoded, err := json.Marshal(string(body))
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(encoded), nil
+}
+
 func (t *JetStreamTransport) deadLetterMalformed(ctx context.Context, msg *nats.Msg, kind string, decodeErr error) error {
+	payload, err := deadLetterPayload(msg.Data)
+	if err != nil {
+		return err
+	}
 	dlqErr := t.PublishDeadLetter(ctx, DeadLetterMessage{
 		Kind:     kind,
 		Subject:  msg.Subject,
 		Reason:   "invalid_json",
 		Error:    decodeErr.Error(),
 		Attempts: 1,
-		Payload:  append(json.RawMessage(nil), msg.Data...),
+		Payload:  payload,
 	})
 	if dlqErr != nil {
 		return dlqErr
@@ -360,13 +379,17 @@ func (t *JetStreamTransport) retryOrDeadLetter(ctx context.Context, msg *nats.Ms
 	}
 
 	if attempts >= uint64(t.maxDeliver) {
+		payload, err := deadLetterPayload(msg.Data)
+		if err != nil {
+			return err
+		}
 		dlqErr := t.PublishDeadLetter(ctx, DeadLetterMessage{
 			Kind:     kind,
 			Subject:  msg.Subject,
 			Reason:   "max_deliver_exceeded",
 			Error:    handlerErr.Error(),
 			Attempts: attempts,
-			Payload:  append(json.RawMessage(nil), msg.Data...),
+			Payload:  payload,
 		})
 		if dlqErr != nil {
 			return dlqErr
