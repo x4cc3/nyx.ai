@@ -8,12 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"nyx/internal/bootstrap"
 	"nyx/internal/config"
 	"nyx/internal/executor"
 	"nyx/internal/functions"
-	"nyx/internal/memvec"
 	"nyx/internal/observability"
-	"nyx/internal/openai"
 	"nyx/internal/queue"
 	"nyx/internal/services/browser"
 	"nyx/internal/services/memory"
@@ -44,7 +43,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	configureEmbeddings(cfg)
+	bootstrap.ConfigureEmbeddings(cfg)
 
 	repo, err := store.OpenRepository(ctx, cfg.DatabaseURL, store.PoolConfig{
 		MaxOpenConns:    cfg.DBMaxOpenConns,
@@ -134,29 +133,4 @@ func run() error {
 		return fmt.Errorf("executor exited: %w", err)
 	}
 	return nil
-}
-
-func configureEmbeddings(cfg config.Config) {
-	switch cfg.MemoryEmbeddingsMode {
-	case "openai":
-		memvec.Configure(openai.NewEmbeddingProvider(openai.EmbeddingConfig{
-			APIKey:     cfg.OpenAIAPIKey,
-			BaseURL:    cfg.OpenAIBaseURL,
-			Model:      cfg.OpenAIEmbeddingModel,
-			Dimensions: cfg.OpenAIEmbeddingDims,
-		}))
-	case "auto":
-		if cfg.OpenAIAPIKey != "" {
-			memvec.Configure(openai.NewEmbeddingProvider(openai.EmbeddingConfig{
-				APIKey:     cfg.OpenAIAPIKey,
-				BaseURL:    cfg.OpenAIBaseURL,
-				Model:      cfg.OpenAIEmbeddingModel,
-				Dimensions: cfg.OpenAIEmbeddingDims,
-			}))
-			return
-		}
-		memvec.Configure(memvec.NewHashProvider(cfg.OpenAIEmbeddingDims))
-	default:
-		memvec.Configure(memvec.NewHashProvider(cfg.OpenAIEmbeddingDims))
-	}
 }

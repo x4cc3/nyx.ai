@@ -1,105 +1,54 @@
-# NYX v2
+# NYX
 
-NYX has been rebuilt as a Go-first autonomous security orchestration scaffold.
+NYX is a Go-first security orchestration platform with a standalone Next.js operator UI.
 
-This repo now keeps only:
+It runs security workflows as **flows** (`tasks -> subtasks -> actions`), executes tool calls through a controlled function gateway, persists evidence in Postgres, and streams live events to the UI.
 
-- `nyx.md` as the rebuild blueprint
-- the Go implementation at the repo root
-- the Next.js operator workspace in `web/`
+## Authorized use
 
-## What exists now
+NYX is intended for authorized security testing and research.
+Only run it against systems you own or have explicit permission to assess.
 
-This rebuild slice gives NYX:
+## What is in this repo
 
-- a Go API service
-- a separate Go orchestrator service
-- a Postgres-backed repository for runtime state
-- a dedicated Go migration command
-- a JetStream-backed flow dispatch path with poll fallback
-- JetStream-backed action request/result transport
-- event fanout and dead-letter subjects in JetStream
-- a container-oriented executor manager with local and Docker modes
-- per-profile execution policies with isolated per-action workspaces
-- structured stdout/stderr capture, exit codes, and retry metadata for executor runs
-- a supervised agent-runtime service with role prompts, task decomposition, retries, and escalation
-- an OpenAI-backed planner plus action-policy path over the Responses API
-- a real Go browser service with `chromedp` automation, screenshots, HTML snapshots, and session replay inputs
-- a real Go search service behind `search_web` with DuckDuckGo HTML or SearxNG providers
-- OpenAI embeddings-backed memory ranking with pgvector persistence and hash fallback for offline/test runs
-- expanded REST workspace APIs with tenant scoping and approval review flows
-- a legacy built-in operator workspace fallback served from `/workspace`
-- structured logging, trace IDs, service metrics, and dedicated observability endpoints
+- Go services at repo root (`api`, `orchestrator`, `executor`, `migrate`)
+- shared runtime code under `internal/`
+- database queries under `db/queries` with `sqlc` output in `internal/dbgen`
+- standalone Next.js operator UI under `web/`
+
+## Core capabilities
+
+- flow lifecycle management (`create -> approve/start -> run -> report`)
+- JetStream-backed flow/action transport with DB-poll fallback for flows
+- isolated action execution through the function gateway (`terminal`, `file`, `browser`, `search_web`, `search_memory`)
+- approval gates for risky actions and optional flow-start approvals
+- persisted events, artifacts, memories, findings, executions, and approvals
 - report exports in Markdown, JSON, and PDF
-- config validation and startup sanity checks for services and queue settings
-- migration rollback support through `cmd/migrate -rollback N`
-- standard end-to-end coverage plus build-tagged Postgres/NATS integration coverage
-- a root `Makefile`, container build recipe, and CI workflow for repeatable packaging
-- a standalone Next.js operator UI in `web/`
-- a workflow-oriented domain model:
-  - `flows`
-  - `tasks`
-  - `subtasks`
-  - `actions`
-  - `artifacts`
-  - `memories`
-  - `findings`
-  - `agents`
-  - `executions`
-- persisted SSE event streaming across processes
-- a named function gateway
-- a real Go browser service
-- a semantic Go memory service
-- `sqlc`-generated query code in `internal/dbgen`
-- migration-backed schema and sqlc-compatible query files
+- observability endpoints (`/healthz`, `/readyz`, `/metrics`)
 
-## API
+## Service map
+
+- `cmd/api` — REST API, workspace endpoints, approvals, reports, SSE
+- `cmd/orchestrator` — flow execution, agent runtime, action dispatch
+- `cmd/executor` — consumes action requests and executes gateway functions
+- `cmd/migrate` — schema migrations and rollback
+- `web/` — operator workspace UI
+
+## API quick reference
 
 ### Health
 
-`GET /healthz`
-
-### List functions
-
-`GET /api/v1/functions`
-
-### Create flow
-
-`POST /api/v1/flows`
-
-Example body:
-
-```json
-{
-  "name": "Acme external assessment",
-  "target": "https://app.example.com",
-  "objective": "Map the workspace architecture and validate the execution loop."
-}
-```
-
-### List flows
-
-`GET /api/v1/flows`
-
-### Get flow detail
-
-`GET /api/v1/flows/{flow_id}`
-
-### Start flow
-
-`POST /api/v1/flows/{flow_id}/start`
-
-When `NYX_REQUIRE_FLOW_APPROVAL=true`, this creates a pending approval instead of queueing immediately.
-
-### Stream flow events
-
-`GET /api/v1/flows/{flow_id}/events`
-
-### Observability and reports
-
-- `GET /metrics`
+- `GET /healthz`
 - `GET /readyz`
-- `GET /api/v1/flows/{flow_id}/report?format=markdown|json|pdf`
+
+### Core flows
+
+- `GET /api/v1/flows`
+- `POST /api/v1/flows`
+- `GET /api/v1/flows/{flow_id}`
+- `POST /api/v1/flows/{flow_id}/start`
+- `POST /api/v1/flows/{flow_id}/cancel`
+- `GET /api/v1/flows/{flow_id}/events`
 
 ### Workspace and approvals
 
@@ -116,218 +65,152 @@ When `NYX_REQUIRE_FLOW_APPROVAL=true`, this creates a pending approval instead o
 - `GET /api/v1/flows/{flow_id}/executions`
 - `GET /api/v1/flows/{flow_id}/approvals`
 - `GET /api/v1/flows/{flow_id}/workspace`
-- `GET /workspace`
-- `GET /workspace/flows/{flow_id}`
-  Legacy fallback UI routes served by the Go API when the old workspace bundle exists.
 
-## Run
+### Reports
 
-Start Postgres and NATS:
+- `GET /api/v1/flows/{flow_id}/report?format=markdown|json|pdf`
+
+## Quickstart (local)
+
+### 1) Start infra and env
 
 ```bash
-make infra-up
 cp .env.example .env
+make infra-up
 ```
 
-Apply migrations:
+### 2) Pick runtime mode
+
+For OpenAI-backed planning/policy:
+
+- set `OPENAI_API_KEY`
+- keep `NYX_AGENT_RUNTIME_MODE=openai` (or `auto`)
+
+For local/no-key development:
+
+- set `NYX_AGENT_RUNTIME_MODE=deterministic`
+
+### 3) Run migrations
 
 ```bash
 set -a; source .env; set +a
 make migrate
 ```
 
-Rollback the most recent migration in a disposable or staging environment:
-
-```bash
-set -a; source .env; set +a
-make rollback
-```
-
-Run the API:
+### 4) Run backend services (three terminals)
 
 ```bash
 set -a; source .env; set +a
 make run-api
 ```
 
-Run the orchestrator in another terminal:
-
 ```bash
 set -a; source .env; set +a
 make run-orchestrator
 ```
-
-Run the executor worker in a third terminal:
 
 ```bash
 set -a; source .env; set +a
 make run-executor
 ```
 
-Build stamped binaries:
+### 5) Run frontend
 
 ```bash
-make build VERSION=v0.1.0
+make web-install
+make web-dev
 ```
 
-Build container images:
+UI: `http://localhost:3000`
+API: `http://localhost:8080`
+
+## Minimal flow walk-through
+
+Create a flow:
 
 ```bash
-make docker-build-api VERSION=v0.1.0
-make docker-build-orchestrator VERSION=v0.1.0
-make docker-build-executor VERSION=v0.1.0
-make docker-build-executor-pentest
-make docker-build-web
-make docker-build-stack
+curl -s -X POST http://localhost:8080/api/v1/flows \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Acme external assessment","target":"https://app.example.com","objective":"Validate execution loop and capture evidence"}' | jq .
 ```
 
-Turn on the full containerized stack:
+Start it:
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/flows/<flow_id>/start | jq .
+```
+
+Stream events:
+
+```bash
+curl -N http://localhost:8080/api/v1/flows/<flow_id>/events
+```
+
+Download report:
+
+```bash
+curl -L "http://localhost:8080/api/v1/flows/<flow_id>/report?format=markdown"
+```
+
+## Containerized stack
+
+Start the full stack:
 
 ```bash
 cp deploy/.env.compose.example deploy/.env
 make compose-prod-up
 ```
 
-`make compose-prod-up` builds the pentest worker image first, then starts Postgres, NATS, API, orchestrator, executor, and the Next.js operator UI.
+This builds the pentest worker image first, then starts Postgres, NATS, API, orchestrator, executor, and frontend.
 
-The executor startup path now fails fast if the Docker socket is missing, if `NYX_EXECUTOR_IMAGE_FOR_PENTEST` is not built locally, or if `NYX_EXECUTOR_NETWORK_MODE=custom` points at a missing Docker network.
-
-When `NYX_EXECUTOR_MODE=docker`, also set `DOCKER_SOCKET_GID=$(stat -c %g /var/run/docker.sock)` in the compose env file so the non-root `nyx` user can talk to the mounted Docker socket.
-
-For a manual bring-up sequence, use:
+Stop it:
 
 ```bash
-cp deploy/.env.compose.example deploy/.env
-make docker-build-executor-pentest
-docker compose --env-file deploy/.env -f deploy/docker-compose.prod.yml up --build -d
+make compose-prod-down
 ```
 
-Browser settings are controlled with:
+## Security and operations notes
 
-- `NYX_BROWSER_MODE=auto|chromedp|http`
-- `NYX_BROWSER_TIMEOUT=20s`
-- `NYX_BROWSER_ARTIFACTS_ROOT=/tmp/nyx-browser`
-- `NYX_BROWSER_HEADLESS=true`
-- `NYX_BROWSER_EXECUTABLE=/path/to/chrome`
-- `NYX_SEARCH_MODE=duckduckgo|searxng|disabled`
-- `NYX_SEARCH_BASE_URL=...`
-- `NYX_SEARCH_TIMEOUT=12s`
-- `NYX_SEARCH_RESULT_LIMIT=5`
+- `NYX_EXECUTOR_MODE=docker` requires Docker socket access from orchestrator/executor.
+- Set `DOCKER_SOCKET_GID=$(stat -c %g /var/run/docker.sock)` in your env when using docker executor mode.
+- `NYX_EXECUTOR_NETWORK_MODE=none` is the safest default. `bridge`/`custom` enable networked terminal execution.
+- `NYX_CORS_ALLOWED_ORIGINS=*` is a development default. Restrict it in shared or production environments.
+- `NYX_API_KEY` can gate API access when bearer auth is not configured.
+- Supabase auth is optional; configure `SUPABASE_URL`, `SUPABASE_JWT_AUDIENCE`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to enable it.
 
-Executor worker-image settings are controlled with:
+## Useful make targets
 
-- `NYX_EXECUTOR_IMAGE=alpine:3.20`
-- `NYX_EXECUTOR_IMAGE_FOR_PENTEST=nyx-executor-pentest:latest`
-- `NYX_EXECUTOR_NETWORK_MODE=none|bridge|custom`
-- `NYX_EXECUTOR_NETWORK_NAME=...`
-- `NYX_EXECUTOR_ENABLE_NET_RAW=false`
-
-Container-stack runbook:
-
-- [docs/operations/compose-runbook.md](/home/xacce/dev/nyx.ai/docs/operations/compose-runbook.md)
-
-Smoke-test the pentest worker image after building it:
-
+- `make fmt`
+- `make test`
+- `make integration-test`
+- `make build`
+- `make docker-build-stack`
 - `make executor-smoke`
+- `make rollback`
 
-Operator API settings:
+## Project policies
 
-- `NYX_API_KEY=...`
-- `NYX_DEFAULT_TENANT=default`
-- `NYX_REQUIRE_FLOW_APPROVAL=true`
-- `NYX_AGENT_RUNTIME_MODE=openai|auto|deterministic`
-- `OPENAI_API_KEY=...`
-- `OPENAI_MODEL=gpt-5.1-codex-mini`
-- `OPENAI_REASONING_EFFORT=high`
-- `OPENAI_MAX_OUTPUT_TOKENS=8000`
-- `NYX_MEMORY_EMBEDDINGS_MODE=auto|openai|hash`
-- `OPENAI_EMBEDDING_MODEL=text-embedding-3-small`
-- `OPENAI_EMBEDDING_DIMS=1536`
+- License: [LICENSE](LICENSE)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security reporting: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
-Requests can send:
+## Development references
 
-- `X-NYX-API-Key`
-- `X-NYX-Tenant`
-- `X-NYX-Operator`
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- API schema: [docs/api/openapi.yaml](docs/api/openapi.yaml)
+- API reference: [docs/api/reference.md](docs/api/reference.md)
+- Operations: [docs/operations.md](docs/operations.md)
+- Compose runbook: [docs/operations/compose-runbook.md](docs/operations/compose-runbook.md)
+- Hardening notes: [docs/hardening.md](docs/hardening.md)
+- Release guide: [docs/release.md](docs/release.md)
+- CI: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
-Workspace frontend commands:
+## Current scope boundaries
 
-- `make web-install`
-- `make web-dev`
-- `make web-build`
+NYX is usable now, but still evolving. Active areas include:
 
-The canonical operator UI is the standalone Next.js app under `web/`, run with `make web-dev` for local development or `cd web && npm run start` after a Next build. The Go API still exposes `/workspace` as a legacy compatibility surface backed by `web/dist` and the older server-rendered fallback bundle.
-
-For real autonomous execution, set `OPENAI_API_KEY` and keep `NYX_AGENT_RUNTIME_MODE=openai` or `auto`. In `openai` mode the orchestrator fails fast if the key is missing, which is the intended production behavior. The planner generates the task graph, and the action policy chooses the next concrete function call inside each subtask from live observations.
-
-Observability settings:
-
-- `NYX_LOG_FORMAT=json|text`
-- `NYX_LOG_LEVEL=debug|info|warn|error`
-- `NYX_API_OBSERVE_ADDR=:9080`
-- `NYX_ORCHESTRATOR_OBSERVE_ADDR=:9081`
-- `NYX_EXECUTOR_OBSERVE_ADDR=:9082`
-
-Then in another terminal:
-
-```bash
-curl -s http://localhost:8080/healthz | jq .
-```
-
-Create and queue a flow:
-
-```bash
-curl -s -X POST http://localhost:8080/api/v1/flows \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Acme external assessment","target":"https://app.example.com","objective":"Operate NYX as a standalone autonomous security system"}' | jq .
-```
-
-```bash
-curl -N http://localhost:8080/api/v1/flows/<flow_id>/events
-```
-
-```bash
-curl -s -X POST http://localhost:8080/api/v1/flows/<flow_id>/start | jq .
-```
-
-## Architecture direction
-
-The new code is organized toward the target shape from `nyx.md`:
-
-- `cmd/api`
-- `cmd/executor`
-- `cmd/orchestrator`
-- `internal/agentruntime`
-- `internal/httpapi`
-- `internal/orchestrator`
-- `internal/functions`
-- `internal/queue`
-- `internal/executor`
-- `internal/services/browser`
-- `internal/services/memory`
-- `internal/domain`
-- `internal/store`
-- `db/queries`
-- `internal/store/migrations`
-
-## What is still missing
-
-This is a real rebuild start, not the full final platform yet. It still needs:
-
-- richer JetStream consumers and policies beyond the current flow/action/event transport
-- production-grade executor isolation policies and profile-specific container images
-- richer agent reasoning beyond the current supervised bootstrap runtime
-- optional graph-sync support for memory relationships
-
-Operational guidance lives in [docs/operations.md](docs/operations.md), and deployment examples live under [deploy](/home/xacce/dev/nyx.ai/deploy).
-
-Regenerate the query package with:
-
-```bash
-sqlc generate
-```
-
-Phase 8 hardening notes live in [docs/hardening.md](docs/hardening.md), and release/versioning guidance lives in [docs/release.md](docs/release.md).
-CI formatting and standard test coverage now live in [.github/workflows/ci.yml](/home/xacce/dev/nyx.ai/.github/workflows/ci.yml).
-
-See [docs/architecture.md](docs/architecture.md).
+- richer queue policies and transport controls
+- stronger production executor isolation profiles
+- deeper agent-runtime planning/reasoning behavior
+- extended memory relationship/sync features
