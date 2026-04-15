@@ -1,4 +1,4 @@
-FROM golang:1.26-bookworm AS build
+FROM golang:1.26.2-bookworm AS build
 
 ARG SERVICE=api
 ARG VERSION=dev
