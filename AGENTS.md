@@ -80,7 +80,7 @@ nyx.ai/
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Go 1.26.1 (module: `nyx`) |
+| Language | Go 1.26.2 (module: `nyx`) |
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
 | Database | PostgreSQL 16 with pgvector extension |
 | Message queue | NATS JetStream |

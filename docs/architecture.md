@@ -1,10 +1,10 @@
-# NYX v2 Architecture
+# NYX Architecture
 
 ## Goal
 
-Rebuild NYX as a Go-first platform for autonomous security operations while keeping NYX's identity and mission.
+NYX is a Go-first platform for autonomous security operations.
 
-## Current rebuilt slice
+## Current platform shape
 
 The repo now contains buildable split Go binaries:
 
@@ -37,7 +37,7 @@ Handles:
 - flow detail queries
 - SSE event streaming
 - built-in HTML workspace pages
-- serving the legacy `/workspace` compatibility surface
+- serving optional `/workspace` compatibility routes
 - architecture and function discovery
 - report export and metrics surfaces
 
@@ -82,13 +82,13 @@ NYX currently uses expanded REST rather than `chi` or GraphQL:
 - tenant-aware collection endpoints under `/api/v1/flows/{id}/...`
 - approval review endpoints under `/api/v1/approvals/...`
 - a standalone Next.js operator workspace under `web/`
-- a legacy `/workspace` compatibility surface in the Go API for older flows and local fallback behavior
+- optional `/workspace` compatibility routes in the Go API for compatibility and local fallback behavior
 
 This keeps the operator surface easy to inspect while the backend model is still moving.
 
 ### Observability
 
-The rebuilt platform now includes:
+The platform includes:
 
 - structured JSON or text logs across API, orchestrator, and executor
 - trace IDs on HTTP requests via `X-NYX-Trace-ID`
@@ -180,7 +180,7 @@ Currently backed by persisted memory records plus a provider-driven embedding pi
 
 ## Domain model
 
-NYX v2 uses the workflow model from `nyx.md`:
+NYX uses this workflow model:
 
 - `flows`
 - `tasks`

@@ -41,17 +41,17 @@ Flow reports can be exported from:
 
 Container bring-up runbook:
 
-- use [compose-runbook.md](/home/xacce/dev/nyx.ai/docs/operations/compose-runbook.md) for the full NYX stack, image build order, Docker socket requirements, and custom-network notes
+- use [compose-runbook.md](operations/compose-runbook.md) for the full NYX stack, image build order, Docker socket requirements, and custom-network notes
 
 Local profile:
 
-- use [deploy/docker-compose.local.yml](/home/xacce/dev/nyx.ai/deploy/docker-compose.local.yml)
+- use [deploy/docker-compose.local.yml](../deploy/docker-compose.local.yml)
 - enable the example observability ports
 - mount local volumes for Postgres and NATS state
 
 Production profile:
 
-- use [deploy/docker-compose.prod.yml](/home/xacce/dev/nyx.ai/deploy/docker-compose.prod.yml) as a baseline
+- use [deploy/docker-compose.prod.yml](../deploy/docker-compose.prod.yml) as a baseline
 - set explicit secrets through environment or secret stores
 - bind observability ports to private networks only
 - run API, orchestrator, and executor as separate services

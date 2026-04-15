@@ -1,11 +1,11 @@
-# NYX Rebuild Plan
+# NYX Historical Build Plan
 
-This is the working execution plan for rebuilding NYX into a standalone Go-first system.
+This is an archived planning document from the earlier platform migration. Keep it for project history; use [README.md](README.md) and [docs/architecture.md](docs/architecture.md) for current project documentation.
 
 ## Phase 0: Foundation
 
 - [x] Delete the legacy Python/Next.js NYX implementation
-- [x] Rebuild the repo as a Go module
+- [x] Convert the repo into a Go module
 - [x] Establish the core domain model:
   - [x] `flows`
   - [x] `tasks`
@@ -137,7 +137,7 @@ Exit criteria:
 - [x] Add release/versioning process
 
 Exit criteria:
-- The rebuilt platform is safe enough to iterate on without brittle manual steps.
+- The platform is safe enough to iterate on without brittle manual steps.
 - Core runtime paths are covered by integration and end-to-end tests.
 
 ## Current Priority Order

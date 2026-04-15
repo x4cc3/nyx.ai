@@ -1,8 +1,8 @@
-# NYX v2 Blueprint
+# NYX Blueprint
 
 ## Purpose
 
-Build NYX as a standalone Go-first platform for autonomous security operations.
+This is a design reference for NYX as a Go-first platform for autonomous security operations.
 The system should keep NYX's operator-console identity while owning its own
 execution model, worker images, safety controls, and reporting pipeline.
 

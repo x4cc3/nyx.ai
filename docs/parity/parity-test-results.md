@@ -2,7 +2,7 @@
 
 ## Test Environment
 
-- **Go version**: 1.26.0
+- **Go version**: 1.26.2
 - **Module**: `nyx`
 - **Core test command**: `go test ./cmd/... ./internal/... -short -count=1`
 - **Frontend build command**: `cd web && npm run build`

@@ -52,7 +52,7 @@ docker compose --env-file deploy/.env -f deploy/docker-compose.prod.yml up -d
 
 ## 5. Configure TLS
 
-Use [deploy/caddy/Caddyfile.example](/home/xacce/dev/nyx.ai/deploy/caddy/Caddyfile.example) as the default reverse-proxy entrypoint. Terminate TLS before the frontend and API, then forward:
+Use [deploy/caddy/Caddyfile.example](../../deploy/caddy/Caddyfile.example) as the default reverse-proxy entrypoint. Terminate TLS before the frontend and API, then forward:
 
 - frontend to `frontend:3000`
 - API to `api:8080`
@@ -75,6 +75,6 @@ Check endpoints:
 
 ## 7. Enable backups and observability
 
-- Load [deploy/prometheus.yml](/home/xacce/dev/nyx.ai/deploy/prometheus.yml) and [deploy/alerts.yml](/home/xacce/dev/nyx.ai/deploy/alerts.yml) into your monitoring stack.
-- Import [deploy/grafana/dashboards/nyx-overview.json](/home/xacce/dev/nyx.ai/deploy/grafana/dashboards/nyx-overview.json) into Grafana.
-- Schedule [scripts/backup-postgres.sh](/home/xacce/dev/nyx.ai/scripts/backup-postgres.sh) and test [scripts/restore-postgres.sh](/home/xacce/dev/nyx.ai/scripts/restore-postgres.sh).
+- Load [deploy/prometheus.yml](../../deploy/prometheus.yml) and [deploy/alerts.yml](../../deploy/alerts.yml) into your monitoring stack.
+- Import [deploy/grafana/dashboards/nyx-overview.json](../../deploy/grafana/dashboards/nyx-overview.json) into Grafana.
+- Schedule [scripts/backup-postgres.sh](../../scripts/backup-postgres.sh) and test [scripts/restore-postgres.sh](../../scripts/restore-postgres.sh).

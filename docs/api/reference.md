@@ -1,6 +1,6 @@
 # NYX API Reference
 
-The canonical machine-readable API definition lives at [docs/api/openapi.yaml](/home/xacce/dev/nyx.ai/docs/api/openapi.yaml).
+The canonical machine-readable API definition lives at [docs/api/openapi.yaml](openapi.yaml).
 
 ## Authentication
 

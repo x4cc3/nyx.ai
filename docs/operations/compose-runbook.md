@@ -2,7 +2,7 @@
 
 This runbook is the clean-room bring-up path for the full containerized NYX stack.
 
-For first-time production setup, start with [docs/operations/first-deploy.md](/home/xacce/dev/nyx.ai/docs/operations/first-deploy.md). For incident handling, use [docs/operations/troubleshooting.md](/home/xacce/dev/nyx.ai/docs/operations/troubleshooting.md).
+For first-time production setup, start with [docs/operations/first-deploy.md](first-deploy.md). For incident handling, use [docs/operations/troubleshooting.md](troubleshooting.md).
 
 It covers:
 
@@ -60,7 +60,7 @@ make docker-build-stack
 
 ## Compose Environment
 
-The production example in [deploy/.env.compose.example](/home/xacce/dev/nyx.ai/deploy/.env.compose.example) defaults to:
+The production example in [deploy/.env.compose.example](../../deploy/.env.compose.example) defaults to:
 
 - `NYX_EXECUTOR_MODE=docker`
 - `NYX_EXECUTOR_IMAGE_FOR_PENTEST=nyx-executor-pentest:latest`

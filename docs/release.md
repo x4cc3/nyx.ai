@@ -1,6 +1,6 @@
 # NYX Release Process
 
-This is the current lightweight release process for the rebuilt Go-based NYX platform.
+This is the current lightweight release process for NYX.
 
 ## Version source
 
@@ -31,7 +31,7 @@ make build VERSION=v0.1.0
 ## Release checklist
 
 1. Run `GOCACHE=$PWD/.gocache go test ./...`.
-2. If infrastructure is available, run `go test -tags=integration ./internal/integration/...` with `NYX_IT_DATABASE_URL` and `NYX_IT_NATS_URL`.
+2. If infrastructure is available, run `go test -tags=integration ./internal/integration/...` with `NYX_TEST_DATABASE_URL` and `NYX_TEST_NATS_URL`.
 3. Apply migrations in a staging environment with `go run ./cmd/migrate`.
 4. Verify rollback safety with `go run ./cmd/migrate -rollback 1` in a disposable environment.
 5. Build all binaries with stamped version metadata.

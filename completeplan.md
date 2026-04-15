@@ -1,12 +1,11 @@
-# NYX Complete Project Plan
+# NYX Historical Completion Plan
 
-This document tracks everything needed to take NYX from its current state
-to a production-grade, operator-ready platform.
+This is an archived planning document from an earlier implementation phase. Keep it for project history; use [README.md](README.md) and [docs/architecture.md](docs/architecture.md) for current project documentation.
 
 ## Current State Summary
 
 NYX is a **near-complete** Go-based distributed security orchestration platform.
-The rebuild plan (`plan.md`) phases 0–8 are done. The tooling parity plan
+The platform plan (`plan.md`) phases 0–8 are done. The tooling parity plan
 (`nyxtoolplan.md`) phases 0–12 are done. The completion plan phases A–H below
 have been substantially implemented.
 
@@ -137,7 +136,7 @@ These are acknowledged gaps that are explicitly non-blocking.
 
 | Phase | Status | Remaining |
 |-------|--------|-----------|
-| Rebuild plan (plan.md) | ✅ 8/8 phases done | 1 deferred item (graph-sync) |
+| Platform plan (plan.md) | ✅ 8/8 phases done | 1 deferred item (graph-sync) |
 | Tooling parity (nyxtoolplan.md) | ✅ 12/12 phases done | — |
 | A. Test coverage | ✅ Done | Integration tests need env vars to run |
 | B. CI/CD | ✅ Done | — |

@@ -1,51 +1,58 @@
 # NYX Web App
 
-This folder hosts the NYX web application (UI).
+This directory contains the Next.js operator UI for NYX.
 
-Stack:
-- Next.js frontend
-- Tailwind CSS
-- App Router-based operator UI for NYX
+## Stack
+
+- Next.js 16
+- React 19
+- Tailwind CSS 4
+- App Router
 
 ## Structure
 
-```
+```text
 web/
   app/                       # App Router pages + API proxy route
   components/                # UI components and layout blocks
   lib/                       # API client helpers and utilities
-  hooks/                     # React hooks
   public/                    # static assets
-  proxy.ts                   # UI Basic Auth proxy middleware
+  proxy.ts                   # session-aware route protection middleware
 ```
 
-## Local Development
+## Local development
 
-- `cd web && npm install`
-- `npm run dev`
+```bash
+cd web
+npm install
+npm run dev
+```
 
-## Production Image
+## Production image
 
-- `docker build -f Dockerfile -t nyx-web:latest .`
-- `docker run --rm -p 3000:3000 --env-file ../nyx nyx-web:latest`
+```bash
+docker build -t nyx-web:latest .
+```
 
-## Usage
+For full-stack deployment, prefer the root Compose workflow documented in [../README.md](../README.md).
 
-- `app/api/[...path]/route.ts` forwards `/api/*` to the backend API server.
-- Protected pages (`/dashboard`, `/scans/*`) enforce an authenticated session server-side via route `layout.tsx` guards.
-- `proxy.ts` is active as Next.js Proxy middleware and can enforce optional Basic Auth + session checks.
-- This app is the primary operator interface for NYX. The Go API's `/workspace` routes are legacy fallback behavior, not the main frontend delivery path.
+## Runtime behavior
+
+- `app/api/[...path]/route.ts` proxies `/api/*` requests to the backend API.
+- `proxy.ts` refreshes Supabase sessions and protects `/dashboard` and `/scans/*` routes.
+- The web app is the primary operator interface for NYX.
+- The Go API still exposes `/workspace` compatibility routes for fallback use.
 
 ## Environment
 
-- `NYX_API_BASE_URL` (preferred; defaults to `http://localhost:8000/api`)
-- `NYX_API_KEY` (preferred backend API key, server-side only)
-- `NYX_SITE_URL` (canonical public site URL used for metadata/sitemap)
-- `NYX_UI_USER` (optional; enables Basic Auth for UI/proxy)
-- `NYX_UI_PASSWORD` (optional; enables Basic Auth for UI/proxy)
-- `NYX_*` equivalents are still accepted for backward compatibility.
+- `NYX_API_BASE_URL` (defaults to `http://localhost:8080/api`)
+- `NYX_API_KEY` (optional backend API key, server-side only)
+- `NYX_SITE_URL` (canonical site URL used for metadata and auth redirects)
+- `NEXT_PUBLIC_SITE_URL` (public site URL for browser-side metadata)
+- `NEXT_PUBLIC_SUPABASE_URL` (optional Supabase project URL)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (optional Supabase anon key)
 
 ## Notes
 
-- UI requests are proxied through `/api/*` on the Next.js server, so secrets stay server-side.
-- If you call the backend directly, ensure it allows CORS from `http://localhost:3000`.
+- UI requests are proxied through `/api/*` on the Next.js server so backend secrets stay server-side.
+- If you call the backend directly from a browser, ensure its CORS policy allows your origin.

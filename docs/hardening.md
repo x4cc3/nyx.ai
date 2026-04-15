@@ -1,6 +1,6 @@
 # NYX Hardening Review
 
-This document records the current Phase 8 hardening posture for the rebuilt NYX platform.
+This document records the current hardening posture for NYX.
 
 ## Executor isolation review
 
@@ -57,7 +57,7 @@ Recommended remediation:
 3. Rotate API keys and Supabase secrets through external secret management.
 4. Publish the OpenAPI contract and pin client generation to tagged releases.
 
-## Test coverage added in Phase 8
+## Hardening-related test coverage
 
 - Standard end-to-end coverage for in-memory flow creation, dispatch, execution, reporting, and SSE streaming.
 - Build-tagged integration coverage for Postgres + NATS + orchestrator + executor worker.
@@ -69,5 +69,5 @@ Recommended remediation:
 1. Add signed or authenticated queue publishers/consumers for multi-service production deployments.
 2. Add per-tenant queue subjects or stream partitioning if tenant isolation must extend to transport.
 3. Run live Docker executor smoke tests under CI once container access is available.
-4. Keep TLS termination examples under version control. A starter Caddy config now exists at [deploy/caddy/Caddyfile.example](/home/xacce/dev/nyx.ai/deploy/caddy/Caddyfile.example).
-5. Schedule backup and restore drills with [scripts/backup-postgres.sh](/home/xacce/dev/nyx.ai/scripts/backup-postgres.sh) and [scripts/restore-postgres.sh](/home/xacce/dev/nyx.ai/scripts/restore-postgres.sh).
+4. Keep TLS termination examples under version control. A starter Caddy config exists at [deploy/caddy/Caddyfile.example](../deploy/caddy/Caddyfile.example).
+5. Schedule backup and restore drills with [scripts/backup-postgres.sh](../scripts/backup-postgres.sh) and [scripts/restore-postgres.sh](../scripts/restore-postgres.sh).

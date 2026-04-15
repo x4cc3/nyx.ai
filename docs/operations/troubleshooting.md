@@ -9,7 +9,7 @@
 ## Flow creation returns `invalid_flow`
 
 - The target must be a valid `http://` or `https://` URL.
-- `name`, `target`, and `objective` are all required now.
+- `name`, `target`, and `objective` are required.
 - The API returns field-level validation errors under `error.field_errors`.
 
 ## Flow start stays pending
@@ -40,7 +40,7 @@
 
 - Run `pg_isready`.
 - Inspect migration state with `cmd/migrate`.
-- Restore from the latest known-good backup with [scripts/restore-postgres.sh](/home/xacce/dev/nyx.ai/scripts/restore-postgres.sh).
+- Restore from the latest known-good backup with [scripts/restore-postgres.sh](../../scripts/restore-postgres.sh).
 
 ## Useful commands
 
